@@ -7,7 +7,7 @@ import pandas as pd
 import joblib
 import matplotlib.pyplot as plt
 import os
-import google.generativeai as genai
+from groq import Groq
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -89,14 +89,13 @@ def forecast(model, last_window_df, scaler, seq_len, n_future):
     return future_preds_real
 
 
-# ====== Analisis dengan Gemini ======
+# ====== Analisis dengan Groq ======
 def generate_gemini_analysis(hist_real, future_preds_real, n_future, last_date, future_dates):
-    api_key = st.secrets.get("GEMINI_API_KEY", None)
+    api_key = st.secrets.get("GROQ_API_KEY", None)
     if not api_key:
-        return "⚠️ GEMINI_API_KEY belum diset di Streamlit secrets."
+        return "⚠️ GROQ_API_KEY belum diset di Streamlit secrets."
 
-    genai.configure(api_key=api_key)
-    model_gemini = genai.GenerativeModel("gemini-2.0-flash")
+    client = Groq(api_key=api_key)
 
     perubahan_persen = (future_preds_real[-1] - hist_real[-1]) / hist_real[-1] * 100
     arah = "naik" if perubahan_persen > 0 else "turun"
@@ -122,17 +121,20 @@ Sertakan: (1) interpretasi arah tren, (2) catatan bahwa ini hasil model statisti
 """
 
     try:
-        response = model_gemini.generate_content(prompt)
-        return response.text
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return response.choices[0].message.content
     except Exception as e:
-        return f"Gagal mendapatkan analisis dari Gemini: {e}"
+        return f"Gagal mendapatkan analisis dari Groq: {e}"
 
 
 # ====== Streamlit UI ======
 st.title("📈 Prediksi Harga Saham dengan LSTM")
 st.write("Forecasting harga Close saham berdasarkan model LSTM yang telah dilatih.")
 
-n_future = st.slider("Pilih jumlah hari prediksi ke depan:", min_value=1, max_value=7, value=1)
+n_future = st.slider("Pilih jumlah hari prediksi ke depan:", min_value=1, max_value=7, value=3)
 
 if st.button("Prediksi"):
     with st.spinner("Sedang menghitung prediksi..."):

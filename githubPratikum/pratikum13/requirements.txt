@@ -6,4 +6,4 @@ scikit-learn
 joblib
 matplotlib
 jcopdl==1.1.10
-google-generativeai
+groq
