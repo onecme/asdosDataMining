@@ -1,0 +1,8 @@
+streamlit
+torch
+numpy
+pandas
+scikit-learn
+joblib
+matplotlib
+jcopdl==1.1.10
