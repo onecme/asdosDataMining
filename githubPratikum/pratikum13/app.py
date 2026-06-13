@@ -6,9 +6,12 @@ import numpy as np
 import pandas as pd
 import joblib
 import matplotlib.pyplot as plt
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-# Model Definition (harus sama dengan saat training) 
+# ====== Model Definition (harus sama dengan saat training) ======
 class LSTM(nn.Module):
     def __init__(self, input_size, output_size, hidden_size, num_layers, dropout):
         super().__init__()
@@ -22,12 +25,12 @@ class LSTM(nn.Module):
         return x, hidden
 
 
-# Load Model & Artifacts 
+# ====== Load Model & Artifacts ======
 @st.cache_resource
 def load_model():
     # weights_only=False diperlukan karena config disimpan sebagai
     # objek jcopdl.callback._config.Config (bukan dict biasa)
-    config = torch.load("configs.pth", map_location="cpu", weights_only=False)
+    config = torch.load(os.path.join(BASE_DIR, "configs.pth"), map_location="cpu", weights_only=False)
 
     model = LSTM(
         input_size=config.input_size,
@@ -36,7 +39,7 @@ def load_model():
         num_layers=config.num_layers,
         dropout=config.dropout,
     )
-    model.load_state_dict(torch.load("weights_best.pth", map_location="cpu"))
+    model.load_state_dict(torch.load(os.path.join(BASE_DIR, "weights_best.pth"), map_location="cpu"))
     model.eval()
 
     return model, config
@@ -44,12 +47,12 @@ def load_model():
 
 @st.cache_resource
 def load_scaler():
-    return joblib.load("scaler.pkl")
+    return joblib.load(os.path.join(BASE_DIR, "scaler.pkl"))
 
 
 @st.cache_data
 def load_last_window():
-    df = pd.read_csv("last_window.csv", index_col=0, parse_dates=True)
+    df = pd.read_csv(os.path.join(BASE_DIR, "last_window.csv"), index_col=0, parse_dates=True)
     return df
 
 
@@ -60,7 +63,7 @@ last_window_df = load_last_window()
 seq_len = config.seq_len
 
 
-# Forecasting Function =
+# ====== Forecasting Function ======
 def forecast(model, last_window_df, scaler, seq_len, n_future):
     # ambil kolom Close & normalisasi
     values = last_window_df["Close"].values.reshape(-1, 1)
@@ -85,11 +88,11 @@ def forecast(model, last_window_df, scaler, seq_len, n_future):
     return future_preds_real
 
 
-# Streamlit UI 
+# ====== Streamlit UI ======
 st.title("📈 Prediksi Harga Saham dengan LSTM")
 st.write("Forecasting harga Close saham berdasarkan model LSTM yang telah dilatih.")
 
-n_future = st.slider("Pilih jumlah hari prediksi ke depan:", min_value=1, max_value=7, value=3)
+n_future = st.slider("Pilih jumlah hari prediksi ke depan:", min_value=1, max_value=30, value=7)
 
 if st.button("Prediksi"):
     with st.spinner("Sedang menghitung prediksi..."):
