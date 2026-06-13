@@ -92,7 +92,7 @@ def forecast(model, last_window_df, scaler, seq_len, n_future):
 st.title("📈 Prediksi Harga Saham dengan LSTM")
 st.write("Forecasting harga Close saham berdasarkan model LSTM yang telah dilatih.")
 
-n_future = st.slider("Pilih jumlah hari prediksi ke depan:", min_value=1, max_value=30, value=7)
+n_future = st.slider("Pilih jumlah hari prediksi ke depan:", min_value=1, max_value=7, value=3)
 
 if st.button("Prediksi"):
     with st.spinner("Sedang menghitung prediksi..."):
