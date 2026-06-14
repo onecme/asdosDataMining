@@ -175,7 +175,7 @@ if st.button("Prediksi"):
     st.pyplot(fig)
 
     # Analisis Gemini
-    st.subheader("🤖 Analisis AI (Gemini)")
+    st.subheader("🤖 Analisis AI")
     with st.spinner("Sedang membuat analisis..."):
         analysis = generate_gemini_analysis(
             hist_real, future_preds_real, n_future, last_date, future_dates
